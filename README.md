@@ -6,12 +6,12 @@ Eigener Name, eigenes Icon, eigene Farben und Texte.
 ## Öffnen und starten
 
 1. Repository in Xcode klonen (Schritt für Schritt: [ANLEITUNG.md](ANLEITUNG.md)) und `Tagwerk.xcodeproj` in **Xcode 16 oder neuer** öffnen.
-2. Oben das Ziel **Tagwerk** und einen iPhone-Simulator wählen, dann **⌘R**.
+2. Oben das Ziel **Tagwerk** und einen iPhone- oder iPad-Simulator wählen, dann **⌘R**.
 3. Für ein echtes iPhone: Projekt → Target *Tagwerk* → *Signing & Capabilities* → eigenes Team wählen
    und ggf. die Bundle-ID `de.tagwerk.app` anpassen.
 4. Tests: **⌘U** (Swift Testing, prüft Sortierung, Filter, Tag-Vorschläge, Erinnerungen, Wiederholung).
 
-Mindestversion: iOS 17 (SwiftData). Neue Dateien in den Ordnern `Tagwerk/` und `TagwerkTests/`
+Universal-App für iPhone und iPad, Mindestversion iOS/iPadOS 17 (SwiftData). Neue Dateien in den Ordnern `Tagwerk/` und `TagwerkTests/`
 erkennt Xcode automatisch (synchronisierte Ordner), eine manuelle Pflege der Projektdatei ist nicht nötig.
 
 ## Funktionen (MVP)
@@ -27,6 +27,7 @@ erkennt Xcode automatisch (synchronisierte Ordner), eine manuelle Pflege der Pro
 | **Erinnern bis erledigt** | Lokale Mitteilung zur Fälligkeit, danach alle 15 Min. (einstellbar bis 4 h), bis die Aufgabe erledigt ist. Aktionen „Erledigt“ und „In 1 Stunde“ direkt in der Mitteilung. |
 | **Wiederkehrende Aufgaben** | Täglich, wöchentlich, alle 2 Wochen, monatlich, jährlich. Beim Abhaken entsteht die nächste Aufgabe. |
 | **Offline, ohne Konto** | Daten liegen per SwiftData nur auf dem Gerät. |
+| **iPad** | Seitenleiste mit allen Tags und Anzahl offener Aufgaben, Liste rechts, alle Ausrichtungen, Split View. Tastaturkürzel ⌘N (neue Aufgabe), ⌘⇧T (Tags), ⌘, (Einstellungen), Kontextmenü per Rechtsklick/langem Druck. |
 | Weitere Details | Notizen, Priorität (3 Stufen), Suche, erledigte ein-/ausblenden, Wischgesten, Dark Mode. |
 
 ## Aufbau
