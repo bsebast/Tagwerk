@@ -14,6 +14,8 @@ final class TodoItem {
     var createdAt: Date = Date()
     var recurrenceRaw: String = "none"
     var remindUntilDone: Bool = true
+    /// Herkunft bei Importen (z. B. „reminders:…“), damit wiederholte Importe nichts doppelt anlegen.
+    var externalID: String?
     var tags: [TodoTag]? = []
 
     init(

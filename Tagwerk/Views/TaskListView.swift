@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import CoreLocation
 
 /// Die eine Liste: alle Aufgaben, automatisch sortiert, per Tags gefiltert.
 /// iPhone: Tag-Leiste oben. iPad (breite Ansicht): Tags in der Seitenleiste, Liste rechts.
@@ -21,6 +22,9 @@ struct TaskListView: View {
     @State private var showTagManager = false
     @State private var showSettings = false
     @State private var columnVisibility: NavigationSplitViewVisibility = .all
+    /// Tags, die der Orts-Filter automatisch gesetzt hat (damit er sie beim Verlassen wieder entfernt).
+    @State private var autoFilterTagIDs: Set<UUID> = []
+    @ObservedObject private var location = LocationService.shared
 
     private var isWide: Bool { sizeClass == .regular }
 
@@ -84,6 +88,21 @@ struct TaskListView: View {
         .sheet(isPresented: $showSettings) {
             SettingsView()
         }
+        .onReceive(location.$lastLocation) { applyLocationFilter($0) }
+    }
+
+    /// Orts-Tags mit „Liste automatisch filtern“: beim Ankommen filtern, beim Verlassen wieder lösen.
+    /// Hebt man den Filter von Hand auf, bleibt er aus, bis man den Ort verlässt und wiederkommt.
+    private func applyLocationFilter(_ current: CLLocation?) {
+        let nearby = Set(tags.filter { $0.locationAutoFilter && $0.isNear(current) }.map(\.uuid))
+        guard nearby != autoFilterTagIDs else { return }
+        let left = autoFilterTagIDs.subtracting(nearby)
+        let entered = nearby.subtracting(autoFilterTagIDs)
+        withAnimation(.snappy) {
+            selectedTagIDs.subtract(left)
+            selectedTagIDs.formUnion(entered)
+        }
+        autoFilterTagIDs = nearby
     }
 
     private var mainList: some View {

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Tagwerk nutzt deinen Standort, um Orts-Tags vorzuschlagen, die Liste am Ort zu filtern und dich beim Ankommen zu erinnern. Der Standort verlässt das Gerät nicht.</string>
+	<key>NSRemindersFullAccessUsageDescription</key>
+	<string>Tagwerk liest deine Erinnerungen nur, um sie auf deinen Wunsch als Aufgaben zu importieren.</string>
+	<key>NSRemindersUsageDescription</key>
+	<string>Tagwerk liest deine Erinnerungen nur, um sie auf deinen Wunsch als Aufgaben zu importieren.</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>Tagwerk trägt fällige Aufgaben in einen eigenen Kalender „Tagwerk“ ein und hält ihn aktuell.</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>Tagwerk trägt fällige Aufgaben in einen eigenen Kalender „Tagwerk“ ein und hält ihn aktuell.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
+</dict>
+</plist>

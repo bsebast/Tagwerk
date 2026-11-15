@@ -7,6 +7,7 @@ struct TaskEditorView: View {
     @Environment(\.modelContext) private var context
     @Query(sort: \TodoTag.sortIndex) private var allTags: [TodoTag]
     @AppStorage(AppSettings.reminderIntervalKey) private var reminderMinutes = AppSettings.defaultReminderMinutes
+    @ObservedObject private var location = LocationService.shared
 
     let item: TodoItem?
 
@@ -42,10 +43,14 @@ struct TaskEditorView: View {
 
     private var trimmedTitle: String { title.trimmingCharacters(in: .whitespacesAndNewlines) }
 
+    /// Passende Tags zum Titel plus Orts-Tags, in deren Nähe man gerade ist.
     private var suggestedIDs: Set<UUID> {
-        guard !trimmedTitle.isEmpty else { return [] }
+        let nearby = allTags
+            .filter { $0.locationSuggest && $0.isNear(location.lastLocation) && !selectedTagIDs.contains($0.uuid) }
+            .map(\.uuid)
+        guard !trimmedTitle.isEmpty else { return Set(nearby) }
         return Set(TagSuggester.suggestions(for: trimmedTitle, candidates: allTags.map(\.candidate),
-                                            excluding: selectedTagIDs, limit: 3))
+                                            excluding: selectedTagIDs, limit: 3)).union(nearby)
     }
 
     var body: some View {
@@ -81,7 +86,7 @@ struct TaskEditorView: View {
                     Text("Tags")
                 } footer: {
                     if !suggestedIDs.isEmpty {
-                        Text("Gestrichelt markierte Tags passen zum Titel.")
+                        Text("Gestrichelt markierte Tags passen zum Titel oder zu deinem aktuellen Ort.")
                     }
                 }
 
@@ -158,7 +163,7 @@ struct TaskEditorView: View {
         target.remindUntilDone = remindUntilDone
         target.tags = allTags.filter { selectedTagIDs.contains($0.uuid) }
         try? context.save()
-        TodoActions.refreshReminders(for: target)
+        TodoActions.didChange(target, in: context)
         dismiss()
     }
 }

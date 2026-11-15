@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import CoreLocation
 
 /// Ein Tag ersetzt klassische Listen/Projekte. Eine Aufgabe kann beliebig viele Tags haben.
 @Model
@@ -12,6 +13,15 @@ final class TodoTag {
     var keywordsRaw: String = ""
     var sortIndex: Int = 0
     var createdAt: Date = Date()
+
+    // Orts-Tag (optional): Ort, Umkreis und gewünschtes Verhalten in der Nähe.
+    var latitude: Double?
+    var longitude: Double?
+    var radius: Double = 150
+    var address: String = ""
+    var locationSuggest: Bool = true
+    var locationAutoFilter: Bool = false
+    var locationNotify: Bool = false
 
     @Relationship(deleteRule: .nullify, inverse: \TodoItem.tags)
     var items: [TodoItem]? = []
@@ -41,5 +51,11 @@ final class TodoTag {
 
     var candidate: TagCandidate {
         TagCandidate(id: uuid, name: name, keywords: keywords, usageCount: items?.count ?? 0)
+    }
+
+    var hasLocation: Bool { latitude != nil && longitude != nil }
+
+    func isNear(_ location: CLLocation?) -> Bool {
+        LocationMatch.isNear(latitude: latitude, longitude: longitude, radius: radius, to: location)
     }
 }

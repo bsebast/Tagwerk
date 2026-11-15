@@ -1,11 +1,13 @@
 import Foundation
 import SwiftData
 
-/// Gemeinsamer Datenspeicher (lokal auf dem Gerät, offline, ohne Konto).
+/// Gemeinsamer Datenspeicher. Liegt immer lokal auf dem Gerät (offline, ohne Konto).
+/// Ist in Xcode die iCloud-Fähigkeit (CloudKit) eingerichtet, synchronisiert SwiftData
+/// automatisch über das private iCloud-Konto des Nutzers; ohne diese Einrichtung bleibt alles lokal.
 enum Persistence {
     static let container: ModelContainer = {
         let schema = Schema([TodoItem.self, TodoTag.self])
-        let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false, cloudKitDatabase: .automatic)
         do {
             return try ModelContainer(for: schema, configurations: [configuration])
         } catch {
@@ -17,7 +19,7 @@ enum Persistence {
     @MainActor
     static let preview: ModelContainer = {
         let schema = Schema([TodoItem.self, TodoTag.self])
-        let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+        let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true, cloudKitDatabase: .none)
         let container = try! ModelContainer(for: schema, configurations: [configuration])
         SeedData.insertDefaults(into: container.mainContext, includeExamples: true)
         return container
@@ -35,6 +37,36 @@ enum SeedData {
             insertDefaults(into: context, includeExamples: true)
         }
         defaults.set(true, forKey: AppSettings.didSeedKey)
+    }
+
+    /// Mit iCloud-Sync legt jedes neue Gerät beim ersten Start die Start-Tags an. Gleichnamige Tags
+    /// werden deshalb zusammengeführt: Aufgaben wandern zum ältesten Tag, das Duplikat wird gelöscht.
+    static func mergeDuplicateTags(_ context: ModelContext) {
+        let descriptor = FetchDescriptor<TodoTag>(sortBy: [SortDescriptor(\.createdAt)])
+        guard let tags = try? context.fetch(descriptor), tags.count > 1 else { return }
+        var keepers: [String: TodoTag] = [:]
+        var changed = false
+        for tag in tags {
+            let key = TagSuggester.fold(tag.name.trimmingCharacters(in: .whitespaces))
+            guard let keep = keepers[key] else {
+                keepers[key] = tag
+                continue
+            }
+            for item in tag.items ?? [] {
+                var itemTags = (item.tags ?? []).filter { $0.uuid != tag.uuid }
+                if !itemTags.contains(where: { $0.uuid == keep.uuid }) { itemTags.append(keep) }
+                item.tags = itemTags
+            }
+            if !keep.hasLocation && tag.hasLocation {
+                keep.latitude = tag.latitude
+                keep.longitude = tag.longitude
+                keep.address = tag.address
+                keep.radius = tag.radius
+            }
+            context.delete(tag)
+            changed = true
+        }
+        if changed { try? context.save() }
     }
 
     static func insertDefaults(into context: ModelContext, includeExamples: Bool) {

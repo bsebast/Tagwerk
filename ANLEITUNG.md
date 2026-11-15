@@ -50,6 +50,40 @@ Danach Xcode einmal starten und die Zusatzkomponenten installieren lassen (inkl.
 
 ---
 
+## Berechtigungen und iCloud einrichten
+
+### Was die App beim ersten Benutzen fragt
+iOS fragt jeweils einmal nach, wenn du eine Funktion zum ersten Mal nutzt. Einstellen musst du dafür in Xcode **nichts**.
+
+| Funktion | Frage von iOS | Wann |
+|---|---|---|
+| Mitteilungen | „Mitteilungen erlauben?“ | beim ersten Start |
+| Orts-Tags | „Standort beim Verwenden der App erlauben?“ | wenn du einem Tag einen Ort gibst |
+| Import aus Erinnerungen | „Vollzugriff auf Erinnerungen?“ | beim Tippen auf *Aus Apple Erinnerungen* |
+| Kalender | „Vollzugriff auf Kalender?“ | beim Einschalten von *Fällige Aufgaben im Kalender* |
+
+Falls du einmal „Nicht erlauben“ getippt hast: iPhone-**Einstellungen → Apps → Tagwerk** und dort wieder einschalten.
+
+### Orts-Tags im Simulator ausprobieren
+Der Simulator hat keinen echten Standort. Im Simulator-Menü **Features → Location → Custom Location…** Koordinaten eingeben (z. B. die deines Tags). Den Ort des Tags legst du in der App unter **Tags verwalten → Tag antippen → Ort** fest.
+
+### iCloud-Sync einschalten (braucht das kostenpflichtige Apple Developer Program)
+Ohne diese Schritte funktioniert alles, nur eben ohne Abgleich zwischen iPhone und iPad.
+
+1. **Apple Developer Program** beitreten (99 €/Jahr): [developer.apple.com/programs](https://developer.apple.com/programs/) → *Enroll*. Mit einer kostenlosen Apple-ID lässt Xcode die iCloud-Fähigkeit nicht zu.
+2. In Xcode links oben das blaue **Tagwerk**-Projekt → Target **Tagwerk** → Reiter **Signing & Capabilities**.
+3. Bei **Team** dein bezahltes Team wählen. Die Bundle-ID muss weltweit eindeutig sein, z. B. `de.bsebast.tagwerk`.
+4. Links oben **+ Capability** → **iCloud** doppelklicken.
+5. Im neuen Abschnitt *iCloud* den Haken bei **CloudKit** setzen, unter *Containers* auf **+** klicken und `iCloud.de.bsebast.tagwerk` eingeben (gleicher Name wie die Bundle-ID mit `iCloud.` davor).
+6. Nochmals **+ Capability** → **Background Modes** → Haken bei **Remote notifications** (meist schon gesetzt).
+7. App auf iPhone **und** iPad starten, auf beiden Geräten mit derselben Apple-ID bei iCloud angemeldet. Der erste Abgleich kann ein paar Minuten dauern.
+8. Xcode legt dabei eine Datei `Tagwerk.entitlements` an. Diese mit **Integrate → Commit…** und *Push* hochladen, damit sie im Repo bleibt.
+
+> Hinweis: iCloud-Sync funktioniert im Simulator nur eingeschränkt. Zum Testen am besten zwei echte Geräte nehmen.
+> Den Kalender (*Fällige Aufgaben im Kalender*) am besten nur auf einem Gerät einschalten, sonst erscheint jede Aufgabe doppelt.
+
+---
+
 ## Im Alltag: Änderungen bekommen
 
 ### Etwas ändern lassen
@@ -84,6 +118,7 @@ So landet deine Änderung auf GitHub und Claude arbeitet beim nächsten Wunsch m
 | `Tagwerk/Logic/` | Sortierung, Filter, Tag-Vorschläge, Erinnerungen |
 | `Tagwerk/Support/` | Farben, Symbole, Start-Tags, Einstellungen |
 | `Tagwerk/Assets.xcassets` | App-Icon und Akzentfarbe |
+| `Tagwerk-Info.plist` | Texte der Berechtigungsabfragen (liegt neben dem Projekt, nicht im Navigator) |
 | `TagwerkTests/` | Automatische Tests (⌘U) |
 
 ## Hilfe bei Problemen
@@ -93,4 +128,5 @@ So landet deine Änderung auf GitHub und Claude arbeitet beim nächsten Wunsch m
 | „Signing for Tagwerk requires a development team“ | Schritt *Auf deinem echten iPhone*, Punkt 2–3 |
 | Pull schlägt fehl wegen lokaler Änderungen | **Integrate → Discard All Changes…** (verwirft deine lokalen Änderungen) oder vorher committen |
 | Seltsame Build-Fehler nach einem Pull | Menü **Product → Clean Build Folder** (⇧⌘K), dann erneut ⌘R |
+| „Personal development teams … do not support the iCloud capability“ | iCloud braucht das bezahlte Developer Program. Ohne: iCloud-Capability wieder entfernen (im Abschnitt *iCloud* auf das ✕). |
 | Simulator fehlt | **Xcode → Settings → Components** → iOS-Plattform laden |
