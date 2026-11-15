@@ -35,6 +35,10 @@ Danach Xcode einmal starten und die Zusatzkomponenten installieren lassen (inkl.
 1. Oben in der Mitte das Ziel **Tagwerk** und daneben einen Simulator wählen, z. B. *iPhone 16*.
 2. **▶︎ (⌘R)** drücken. Der Simulator startet mit der App.
 
+> Steht oben „Any iOS Device (arm64)“, kann Xcode die App nur bauen, nicht starten. Dann auf den Namen klicken und unter **iOS Simulators** ein Gerät wählen. Sind dort keine aufgelistet: **Xcode → Settings → Components** → bei *iOS* auf *Get* klicken.
+
+**iPad testen:** Statt eines iPhones einfach einen iPad-Simulator wählen, z. B. *iPad Air 13-inch*. Dort erscheinen die Tags links in einer Seitenleiste. Im Simulator mit ⌘← / ⌘→ drehen.
+
 **Auf deinem echten iPhone:**
 1. iPhone per Kabel anschließen, „Diesem Computer vertrauen“ bestätigen.
 2. In Xcode links ganz oben auf das blaue **Tagwerk**-Projekt klicken → Target **Tagwerk** → Reiter **Signing & Capabilities**.
