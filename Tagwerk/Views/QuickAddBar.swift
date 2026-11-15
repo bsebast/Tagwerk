@@ -6,6 +6,7 @@ import SwiftData
 struct QuickAddBar: View {
     @Environment(\.modelContext) private var context
     @Query(sort: \TodoTag.sortIndex) private var tags: [TodoTag]
+    @ObservedObject private var location = LocationService.shared
 
     let presetTagIDs: Set<UUID>
     let onOpenEditor: () -> Void
@@ -16,11 +17,16 @@ struct QuickAddBar: View {
 
     private var appliedTagIDs: Set<UUID> { presetTagIDs.union(chosenTagIDs) }
 
+    /// Orts-Tags in der Nähe zuerst, dann Tags, die zum Titel passen.
     private var suggestions: [TodoTag] {
+        let nearby = tags.filter {
+            $0.locationSuggest && $0.isNear(location.lastLocation) && !appliedTagIDs.contains($0.uuid)
+        }
         let trimmed = title.trimmingCharacters(in: .whitespaces)
-        guard !trimmed.isEmpty else { return [] }
-        let ids = TagSuggester.suggestions(for: trimmed, candidates: tags.map(\.candidate), excluding: appliedTagIDs, limit: 3)
-        return ids.compactMap { id in tags.first { $0.uuid == id } }
+        guard !trimmed.isEmpty else { return nearby }
+        let excluded = appliedTagIDs.union(nearby.map(\.uuid))
+        let ids = TagSuggester.suggestions(for: trimmed, candidates: tags.map(\.candidate), excluding: excluded, limit: 3)
+        return nearby + ids.compactMap { id in tags.first { $0.uuid == id } }
     }
 
     private var appliedTags: [TodoTag] {
@@ -91,6 +97,7 @@ struct QuickAddBar: View {
         context.insert(item)
         item.tags = tags.filter { appliedTagIDs.contains($0.uuid) }
         try? context.save()
+        TodoActions.didChange(item, in: context)
         title = ""
         chosenTagIDs.removeAll()
     }

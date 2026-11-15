@@ -26,8 +26,12 @@ erkennt Xcode automatisch (synchronisierte Ordner), eine manuelle Pflege der Pro
 | **Schnelleingabe** | Eingabefeld unten; aktive Filter-Tags werden automatisch übernommen. |
 | **Erinnern bis erledigt** | Lokale Mitteilung zur Fälligkeit, danach alle 15 Min. (einstellbar bis 4 h), bis die Aufgabe erledigt ist. Aktionen „Erledigt“ und „In 1 Stunde“ direkt in der Mitteilung. |
 | **Wiederkehrende Aufgaben** | Täglich, wöchentlich, alle 2 Wochen, monatlich, jährlich. Beim Abhaken entsteht die nächste Aufgabe. |
-| **Offline, ohne Konto** | Daten liegen per SwiftData nur auf dem Gerät. |
+| **Offline, ohne Konto** | Daten liegen per SwiftData auf dem Gerät; iCloud ist optional. |
 | **iPad** | Seitenleiste mit allen Tags und Anzahl offener Aufgaben, Liste rechts, alle Ausrichtungen, Split View. Tastaturkürzel ⌘N (neue Aufgabe), ⌘⇧T (Tags), ⌘, (Einstellungen), Kontextmenü per Rechtsklick/langem Druck. |
+| **Orts-Tags** | Pro Tag optional ein Ort (Adresse oder aktueller Standort, Umkreis 100–500 m). In der Nähe: Tag vorschlagen, Liste automatisch filtern und/oder Mitteilung mit Zahl offener Aufgaben – jeweils einzeln schaltbar. |
+| **Import** | Apple Erinnerungen (Listen → Tags), Text (eine Aufgabe pro Zeile, `#tag`), CSV (Todoist, TickTick, Microsoft To Do, Excel), .ics (VTODO, z. B. Outlook). Wiederholbar, Duplikate werden übersprungen. |
+| **Kalender** | Optional: offene Aufgaben mit Datum erscheinen im eigenen Kalender „Tagwerk“ und verschwinden beim Abhaken. |
+| **iCloud-Sync** | SwiftData + CloudKit über das private iCloud-Konto, sobald die iCloud-Fähigkeit in Xcode eingerichtet ist (siehe ANLEITUNG). Ohne Einrichtung bleibt alles lokal. |
 | Weitere Details | Notizen, Priorität (3 Stufen), Suche, erledigte ein-/ausblenden, Wischgesten, Dark Mode. |
 
 ## Aufbau
@@ -40,14 +44,11 @@ Tagwerk/
                           ReminderScheduler (UserNotifications), TodoActions
   Views/                  TaskListView, TaskRowView, QuickAddBar, TagFilterBar,
                           TaskEditorView, TagManagerView, TagEditorView, SettingsView
-  Support/                Persistence + Start-Tags, AppSettings, Palette (Farben, Symbole)
+  Support/                Persistence (+ iCloud), Start-Tags, AppSettings, Palette
+Tagwerk-Info.plist        Texte für die Berechtigungsabfragen (Standort, Erinnerungen, Kalender)
 TagwerkTests/             Unit-Tests der Logik
 ```
 
 ## Mögliche nächste Schritte
 
-- Orts-Tags (Geofencing, 150 m) mit Vorschlag/Filter/Mitteilung
-- Import aus Erinnerungen (EventKit), CSV oder .ics
-- Fällige Aufgaben im iOS-Kalender anzeigen
-- iCloud-Sync (SwiftData + CloudKit; das Datenmodell ist bereits CloudKit-kompatibel aufgebaut)
 - Widget und Siri-Kurzbefehl „Aufgabe hinzufügen“

@@ -24,14 +24,33 @@ struct RootView: View {
             .tint(Palette.teal)
             .task {
                 SeedData.seedIfNeeded(context)
+                SeedData.mergeDuplicateTags(context)
                 _ = await ReminderScheduler.requestAuthorization()
                 TodoActions.rescheduleAll(in: context)
+                CalendarSync.syncAll(in: context)
+                startLocationIfNeeded()
             }
             .onChange(of: scenePhase) { _, phase in
-                if phase == .active {
+                switch phase {
+                case .active:
+                    SeedData.mergeDuplicateTags(context)
                     TodoActions.rescheduleAll(in: context)
+                    CalendarSync.syncAll(in: context)
+                    startLocationIfNeeded()
+                case .background:
+                    LocationService.shared.stop()
+                default:
+                    break
                 }
             }
+    }
+
+    /// Standort nur verwenden, wenn mindestens ein Tag einen Ort hat.
+    private func startLocationIfNeeded() {
+        let tags = (try? context.fetch(FetchDescriptor<TodoTag>())) ?? []
+        if tags.contains(where: \.hasLocation) {
+            LocationService.shared.start()
+        }
     }
 }
 

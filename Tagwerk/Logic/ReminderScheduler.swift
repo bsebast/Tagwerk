@@ -1,5 +1,6 @@
 import Foundation
 import UserNotifications
+import CoreLocation
 
 /// Plant lokale Mitteilungen. Nichts verlässt das Gerät.
 enum ReminderScheduler {
@@ -71,16 +72,71 @@ enum ReminderScheduler {
         }
     }
 
+    // MARK: Orts-Mitteilungen
+
+    /// Ein Orts-Tag mit „Mitteilung beim Ankommen“.
+    struct LocationPayload {
+        let tagID: UUID
+        let name: String
+        let latitude: Double
+        let longitude: Double
+        let radius: Double
+        let openCount: Int
+    }
+
+    static let locationPrefix = "loc-"
+    static let maxLocationReminders = 20
+
+    static func locationIdentifier(for tagID: UUID) -> String { "\(locationPrefix)\(tagID.uuidString)" }
+
+    /// Meldet sich jedes Mal, wenn das iPhone den Umkreis betritt (benötigt nur „Beim Verwenden der App“).
+    static func scheduleLocation(_ payload: LocationPayload) {
+        let identifier = locationIdentifier(for: payload.tagID)
+        let region = CLCircularRegion(
+            center: CLLocationCoordinate2D(latitude: payload.latitude, longitude: payload.longitude),
+            radius: max(payload.radius, 100),
+            identifier: identifier
+        )
+        region.notifyOnEntry = true
+        region.notifyOnExit = false
+
+        let content = UNMutableNotificationContent()
+        content.title = "In der Nähe: \(payload.name)"
+        content.body = payload.openCount == 1 ? "1 offene Aufgabe" : "\(payload.openCount) offene Aufgaben"
+        content.sound = .default
+        content.userInfo = ["tagID": payload.tagID.uuidString]
+
+        let trigger = UNLocationNotificationTrigger(region: region, repeats: true)
+        UNUserNotificationCenter.current().add(
+            UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+        )
+    }
+
+    /// Ersetzt nur die Orts-Mitteilungen (z. B. nachdem sich die Zahl offener Aufgaben geändert hat).
+    static func replaceLocationReminders(_ locations: [LocationPayload]) {
+        let center = UNUserNotificationCenter.current()
+        center.getPendingNotificationRequests { requests in
+            let old = requests.map(\.identifier).filter { $0.hasPrefix(locationPrefix) }
+            center.removePendingNotificationRequests(withIdentifiers: old)
+            for payload in locations.prefix(maxLocationReminders) {
+                scheduleLocation(payload)
+            }
+        }
+    }
+
     /// Plant alle Erinnerungen neu (beim App-Start und nach Änderung des Intervalls).
     /// Die am frühesten fälligen Aufgaben bekommen Vorrang vor dem 64er-Limit.
-    static func rescheduleAll(_ payloads: [Payload], interval: TimeInterval, now: Date = Date()) {
+    static func rescheduleAll(_ payloads: [Payload], locations: [LocationPayload] = [], interval: TimeInterval, now: Date = Date()) {
         let center = UNUserNotificationCenter.current()
         center.removeAllPendingNotificationRequests()
 
-        var budget = globalLimit
+        let activeLocations = Array(locations.prefix(maxLocationReminders))
+        activeLocations.forEach(scheduleLocation)
+
+        var budget = globalLimit - activeLocations.count
         for payload in payloads.sorted(by: { $0.due < $1.due }) where budget > 0 {
-            let count = payload.remindUntilDone ? min(repeatsPerItem, budget) : 1
             if !payload.remindUntilDone && payload.due <= now { continue }
+            let count = payload.remindUntilDone ? min(repeatsPerItem, budget) : 1
             schedule(payload, interval: interval, now: now, maxCount: count)
             budget -= count
         }

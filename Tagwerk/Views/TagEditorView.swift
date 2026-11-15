@@ -1,7 +1,7 @@
 import SwiftUI
 import SwiftData
 
-/// Tag anlegen oder bearbeiten: Name, Symbol, Farbe und Stichwörter für Vorschläge.
+/// Tag anlegen oder bearbeiten: Name, Symbol, Farbe, Stichwörter für Vorschläge und optional ein Ort.
 struct TagEditorView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var context
@@ -14,6 +14,7 @@ struct TagEditorView: View {
     @State private var symbol: String
     @State private var colorHex: String
     @State private var keywords: String
+    @State private var place: TagLocationDraft
 
     init(tag: TodoTag?, onCreate: ((TodoTag) -> Void)? = nil) {
         self.tag = tag
@@ -22,6 +23,7 @@ struct TagEditorView: View {
         _symbol = State(initialValue: tag?.symbol ?? "tag")
         _colorHex = State(initialValue: tag?.colorHex ?? Palette.tagColors.randomElement() ?? "#0F766E")
         _keywords = State(initialValue: tag?.keywordsRaw ?? "")
+        _place = State(initialValue: TagLocationDraft(tag: tag))
     }
 
     private var trimmedName: String { name.trimmingCharacters(in: .whitespacesAndNewlines) }
@@ -87,6 +89,8 @@ struct TagEditorView: View {
             } footer: {
                 Text("Enthält ein Aufgabentitel eines dieser Wörter, schlägt Tagwerk diesen Tag vor. Mehrere Wörter mit Komma trennen.")
             }
+
+            TagLocationSection(draft: $place, color: Color(hex: colorHex), name: trimmedName)
         }
         .navigationTitle(tag == nil ? "Neuer Tag" : "Tag bearbeiten")
         .navigationBarTitleDisplayMode(.inline)
@@ -107,13 +111,19 @@ struct TagEditorView: View {
             tag.symbol = symbol
             tag.colorHex = colorHex
             tag.keywordsRaw = keywords
+            place.apply(to: tag)
         } else {
             let newTag = TodoTag(name: trimmedName, symbol: symbol, colorHex: colorHex, sortIndex: (allTags.map(\.sortIndex).max() ?? -1) + 1)
             newTag.keywordsRaw = keywords
+            place.apply(to: newTag)
             context.insert(newTag)
             onCreate?(newTag)
         }
         try? context.save()
+        if place.coordinate != nil {
+            LocationService.shared.start()
+        }
+        TodoActions.refreshLocationReminders(in: context)
         dismiss()
     }
 }
